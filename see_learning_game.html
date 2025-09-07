@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEE Learning: The Resilient Zone Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .title {
+            color: #2E8B57;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .character {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            transition: all 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            cursor: pointer;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .resilient { 
+            background: linear-gradient(45deg, #90EE90, #98FB98);
+            border: 4px solid #32CD32;
+            box-shadow: 0 0 20px rgba(50, 205, 50, 0.3);
+        }
+        
+        .high-zone { 
+            background: linear-gradient(45deg, #FFB6C1, #FFA07A);
+            border: 4px solid #FF6347;
+            box-shadow: 0 0 20px rgba(255, 99, 71, 0.3);
+            animation: shake 0.5s ease-in-out infinite;
+        }
+        
+        .low-zone { 
+            background: linear-gradient(45deg, #B0C4DE, #D3D3D3);
+            border: 4px solid #708090;
+            box-shadow: 0 0 20px rgba(112, 128, 144, 0.3);
+            opacity: 0.7;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .zone-indicator {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 15px 0;
+            min-height: 40px;
+        }
+
+        .resilient-text { color: #32CD32; }
+        .high-text { color: #FF6347; }
+        .low-text { color: #708090; }
+
+        .tools-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tool-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .tool-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+        }
+
+        .tool-button:active {
+            transform: scale(0.95);
+        }
+
+        .scenario-container {
+            background: #f0f8ff;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #4CAF50;
+        }
+
+        .scenario-text {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .breathing-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #87CEEB, #98FB98);
+            margin: 20px auto;
+            display: none;
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .feedback {
+            background: #e8f5e8;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid #4CAF50;
+            color: #2E8B57;
+            font-weight: bold;
+            display: none;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            height: 100%;
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .score {
+            font-size: 1.2em;
+            color: #2E8B57;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .help-text {
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">SEE Learning Adventure</h1>
+            <p class="subtitle">Help our friend stay in the Resilient Zone!</p>
+        </div>
+
+        <div class="character resilient" id="character">😊</div>
+        <div class="zone-indicator resilient-text" id="zoneText">In the Resilient Zone - Feeling Good!</div>
+
+        <div class="scenario-container">
+            <div class="scenario-text" id="scenarioText">
+                Welcome! Click on our friend above to see how they're feeling. When they move out of the green Resilient Zone, use the SEE Learning tools below to help them return to balance.
+            </div>
+        </div>
+
+        <div class="tools-container">
+            <button class="tool-button" onclick="useBreathing()">🌬️ Deep Breathing</button>
+            <button class="tool-button" onclick="useGrounding()">🌱 Grounding</button>
+            <button class="tool-button" onclick="useResource()">💝 Think of Something Good</button>
+            <button class="tool-button" onclick="useMovement()">🏃 Movement Break</button>
+        </div>
+
+        <div class="breathing-circle" id="breathingCircle"></div>
+        <div class="feedback" id="feedback"></div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="score" id="score">Resilience Points: 0</div>
+        
+        <p class="help-text">💡 Tip: When we practice these tools, we build our emotional resilience and learn to take care of ourselves and others!</p>
+    </div>
+
+    <script>
+        let currentZone = 'resilient';
+        let score = 0;
+        let scenarios = [
+            {
+                text: "Oh no! Our friend just heard some loud, unexpected noises and feels startled and anxious.",
+                zone: 'high',
+                emotion: '😰'
+            },
+            {
+                text: "Our friend is feeling overwhelmed by too much homework and tests coming up.",
+                zone: 'high',
+                emotion: '😫'
+            },
+            {
+                text: "It's been a long day and our friend feels tired, sad, and disconnected.",
+                zone: 'low',
+                emotion: '😔'
+            },
+            {
+                text: "Our friend is worried about making new friends at school.",
+                zone: 'high',
+                emotion: '😟'
+            },
+            {
+                text: "After lunch, our friend feels sleepy and unmotivated.",
+                zone: 'low',
+                emotion: '😴'
+            }
+        ];
+
+        let currentScenario = 0;
+
+        function updateCharacter(zone, emotion) {
+            const character = document.getElementById('character');
+            const zoneText = document.getElementById('zoneText');
+            
+            character.className = `character ${zone}`;
+            character.textContent = emotion;
+            
+            switch(zone) {
+                case 'resilient':
+                    zoneText.textContent = 'In the Resilient Zone - Feeling Balanced! 🌟';
+                    zoneText.className = 'zone-indicator resilient-text';
+                    break;
+                case 'high':
+                    zoneText.textContent = 'In the High Zone - Feeling Anxious or Overwhelmed 🔥';
+                    zoneText.className = 'zone-indicator high-text';
+                    break;
+                case 'low':
+                    zoneText.textContent = 'In the Low Zone - Feeling Tired or Disconnected 🌧️';
+                    zoneText.className = 'zone-indicator low-text';
+                    break;
+            }
+            currentZone = zone;
+        }
+
+        function showFeedback(message) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.style.display = 'block';
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateScore(points) {
+            score += points;
+            document.getElementById('score').textContent = `Resilience Points: ${score}`;
+            const progress = Math.min((score / 50) * 100, 100);
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function nextScenario() {
+            if (currentScenario < scenarios.length) {
+                const scenario = scenarios[currentScenario];
+                document.getElementById('scenarioText').textContent = scenario.text;
+                updateCharacter(scenario.zone, scenario.emotion);
+                currentScenario++;
+            } else {
+                // Reset scenarios
+                currentScenario = 0;
+                document.getElementById('scenarioText').textContent = "Great job! You've helped our friend practice using SEE Learning tools. Click on them to start a new challenge!";
+                updateCharacter('resilient', '😊');
+            }
+        }
+
+        function useBreathing() {
+            const breathingCircle = document.getElementById('breathingCircle');
+            breathingCircle.style.display = 'block';
+            
+            setTimeout(() => {
+                breathingCircle.style.display = 'none';
+                if (currentZone !== 'resilient') {
+                    updateCharacter('resilient', '😊');
+                    showFeedback('Deep breathing helped calm the nervous system! 🌬️ Taking slow, deep breaths activates our body\'s relaxation response.');
+                    updateScore(10);
+                    setTimeout(nextScenario, 2000);
+                } else {
+                    showFeedback('Nice practice! Deep breathing always helps us stay centered. 🧘‍♀️');
+                    updateScore(5);
+                }
+            }, 4000);
+        }
+
+        function useGrounding() {
+            if (currentZone !== 'resilient') {
+                updateCharacter('resilient', '😊');
+                showFeedback('Grounding worked! 🌱 Feeling our feet on the ground and noticing what supports us helps us feel safe and stable.');
+                updateScore(10);
+                setTimeout(nextScenario, 2000);
+            } else {
+                showFeedback('Great grounding practice! 🦶 Connecting with what supports us builds resilience.');
+                updateScore(5);
+            }
+        }
+
+        function useResource() {
+            if (currentZone !== 'resilient') {
+                updateCharacter('resilient', '😊');
+                showFeedback('Thinking of something good helped! 💝 Remembering positive people, places, or experiences helps our nervous system feel safe.');
+                updateScore(10);
+                setTimeout(nextScenario, 2000);
+            } else {
+                showFeedback('Beautiful! 🌟 Focusing on our resources strengthens our inner resilience.');
+                updateScore(5);
+            }
+        }
+
+        function useMovement() {
+            const character = document.getElementById('character');
+            character.style.animation = 'none';
+            setTimeout(() => {
+                character.style.animation = 'float 0.5s ease-in-out 4';
+                if (currentZone !== 'resilient') {
+                    setTimeout(() => {
+                        updateCharacter('resilient', '😊');
+                        showFeedback('Movement helped! 🏃 Physical activity helps release stress and brings us back to balance.');
+                        updateScore(10);
+                        setTimeout(nextScenario, 2000);
+                    }, 2000);
+                } else {
+                    showFeedback('Great movement! 💪 Moving our body helps keep our energy balanced.');
+                    updateScore(5);
+                }
+            }, 100);
+        }
+
+        // Click on character to trigger scenarios
+        document.getElementById('character').addEventListener('click', function() {
+            if (currentZone === 'resilient') {
+                nextScenario();
+            }
+        });
+
+        // Initialize
+        document.getElementById('scenarioText').textContent = "Welcome! Click on our friend above to see how they're feeling. When they move out of the green Resilient Zone, use the SEE Learning tools below to help them return to balance.";
+    </script>
+</body>
+</html>
