@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEE Learning Interactive Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            color: #667eea;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu-btn span {
+            width: 25px;
+            height: 3px;
+            background: #333;
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 80px;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.6);
+        }
+
+        /* Game Cards Section */
+        .games-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 3rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .game-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .game-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .game-features {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-features li {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .game-features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .play-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* About Section */
+        .about-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .about-text h2 {
+            font-size: 2.2rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-text p {
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .features-list {
+            list-style: none;
+        }
+
+        .features-list li {
+            color: #667eea;
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .features-list li::before {
+            content: "🌟";
+            position: absolute;
+            left: 0;
+        }
+
+        .about-visual {
+            text-align: center;
+            font-size: 8rem;
+            color: #667eea;
+            opacity: 0.7;
+        }
+
+        /* Footer */
+        .footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #667eea;
+        }
+
+        /* Game Modal */
+        .game-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .game-modal-content {
+            position: relative;
+            background: white;
+            margin: 2% auto;
+            width: 95%;
+            max-width: 1000px;
+            height: 90%;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-modal-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .game-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: white;
+                flex-direction: column;
+                padding: 1rem;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+
+            .nav-menu.active {
+                display: flex;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-visual {
+                font-size: 4rem;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="#" class="logo">🧠💝 SEE Learning Hub</a>
+            <nav class="nav-menu" id="navMenu">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#games">Games</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#resources">Resources</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </nav>
+            <div class="mobile-menu-btn" id="mobileMenuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Hero Section -->
+            <section id="home" class="hero">
+                <h1>SEE Learning Interactive Hub</h1>
+                <p>Develop awareness, compassion, and engagement through fun, research-based games and activities. Perfect for schools implementing Social, Emotional, and Ethical Learning.</p>
+                <a href="#games" class="cta-button">Start Learning</a>
+            </section>
+
+            <!-- Games Section -->
+            <section id="games" class="games-section">
+                <h2 class="section-title">Interactive Learning Games</h2>
+                <div class="games-grid">
+                    <div class="game-card" onclick="openGame('resilient-zone')">
+                        <div class="game-icon">🌟</div>
+                        <h3 class="game-title">Resilient Zone Adventure</h3>
+                        <p class="game-description">Help our friend stay balanced using body regulation skills and nervous system awareness.</p>
+                        <ul class="game-features">
+                            <li>Learn about the three zones (Resilient, High, Low)</li>
+                            <li>Practice grounding, breathing, and resourcing</li>
+                            <li>Build emotional regulation skills</li>
+                            <li>Trauma-informed approach</li>
+                        </ul>
+                        <button class="play-button">Play Now</button>
+                    </div>
+
+                    <div class="game-card" onclick="openGame('mindful-heart')">
+                        <div class="game-icon">🧠💝</div>
+                        <h3 class="game-title">Mindful Heart Explorer</h3>
+                        <p class="game-description">Train attention and explore emotions through mindfulness and emotional literacy activities.</p>
+                        <ul class="game-features">
+                            <li>Mindful breathing practice</li>
+                            <li>Emotion detective scenarios</li>
+                            <li>Focus training games</li>
+                            <li>Body awareness exercises</li>
+                        </ul>
+                        <button class="play-button">Play Now</button>
+                    </div>
+
+                    <div class="game-card" onclick="openGame('coming-soon')">
+                        <div class="game-icon">🤝</div>
+                        <h3 class="game-title">Relationship Builder</h3>
+                        <p class="game-description">Practice empathy, communication skills, and conflict resolution in various social scenarios.</p>
+                        <ul class="game-features">
+                            <li>Empathic listening practice</li>
+                            <li>Communication scenarios</li>
+                            <li>Conflict transformation</li>
+                            <li>Perspective-taking exercises</li>
+                        </ul>
+                        <button class="play-button">Coming Soon</button>
+                    </div>
+
+                    <div class="game-card" onclick="openGame('coming-soon')">
+                        <div class="game-icon">🌍</div>
+                        <h3 class="game-title">Systems Thinker</h3>
+                        <p class="game-description">Explore interdependence, common humanity, and global citizenship through interactive challenges.</p>
+                        <ul class="game-features">
+                            <li>Systems thinking puzzles</li>
+                            <li>Interdependence mapping</li>
+                            <li>Global citizenship scenarios</li>
+                            <li>Community engagement projects</li>
+                        </ul>
+                        <button class="play-button">Coming Soon</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Section -->
+            <section id="about" class="about-section">
+                <div class="about-grid">
+                    <div class="about-text">
+                        <h2>About SEE Learning</h2>
+                        <p>Social, Emotional, and Ethical (SEE) Learning is a comprehensive framework developed by Emory University that integrates mindfulness, compassion, and systems thinking into education.</p>
+                        <p>Our interactive platform brings these evidence-based concepts to life through engaging games and activities that help students develop crucial life skills.</p>
+                        <ul class="features-list">
+                            <li>Research-based curriculum from Emory University</li>
+                            <li>Trauma-informed design principles</li>
+                            <li>Develops attention, emotional regulation, and empathy</li>
+                            <li>Builds resilience and well-being</li>
+                            <li>Supports whole-school implementation</li>
+                        </ul>
+                    </div>
+                    <div class="about-visual">
+                        🎓✨
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#privacy">Privacy Policy</a>
+                <a href="#terms">Terms of Use</a>
+                <a href="#support">Support</a>
+                <a href="#educator-resources">Educator Resources</a>
+                <a href="https://compassion.emory.edu/" target="_blank">Emory SEE Learning</a>
+            </div>
+            <p>&copy; 2024 SEE Learning Interactive Hub. Inspired by the SEE Learning curriculum from Emory University.</p>
+        </div>
+    </footer>
+
+    <!-- Game Modal -->
+    <div id="gameModal" class="game-modal">
+        <div class="game-modal-content">
+            <div class="game-modal-header">
+                <h3 id="gameModalTitle">Game Loading...</h3>
+                <button class="close-modal" onclick="closeGame()">&times;</button>
+            </div>
+            <iframe id="gameFrame" class="game-frame" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+                // Close mobile menu if open
+                navMenu.classList.remove('active');
+            });
+        });
+
+        // Game modal functions
+        function openGame(gameType) {
+            const modal = document.getElementById('gameModal');
+            const frame = document.getElementById('gameFrame');
+            const title = document.getElementById('gameModalTitle');
+            
+            if (gameType === 'coming-soon') {
+                alert('This game is coming soon! Stay tuned for updates.');
+                return;
+            }
+            
+            // Set game content based on type
+            if (gameType === 'resilient-zone') {
+                title.textContent = 'Resilient Zone Adventure';
+                // You would set the source to your actual game files
+                frame.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(`
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial; background: linear-gradient(135deg, #87CEEB, #98FB98);">
+                        <div style="text-align: center; color: white;">
+                            <div style="font-size: 4rem; margin-bottom: 1rem;">🌟</div>
+                            <h2>Resilient Zone Adventure</h2>
+                            <p>This would be your actual game content!</p>
+                            <p>Upload your HTML game files to display here.</p>
+                        </div>
+                    </div>
+                `);
+            } else if (gameType === 'mindful-heart') {
+                title.textContent = 'Mindful Heart Explorer';
+                frame.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(`
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial; background: linear-gradient(135deg, #667eea, #764ba2);">
+                        <div style="text-align: center; color: white;">
+                            <div style="font-size: 4rem; margin-bottom: 1rem;">🧠💝</div>
+                            <h2>Mindful Heart Explorer</h2>
+                            <p>This would be your actual game content!</p>
+                            <p>Upload your HTML game files to display here.</p>
+                        </div>
+                    </div>
+                `);
+            }
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeGame() {
+            const modal = document.getElementById('gameModal');
+            const frame = document.getElementById('gameFrame');
+            
+            modal.style.display = 'none';
+            frame.src = ''; // Clear the iframe
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('gameModal');
+            if (e.target === modal) {
+                closeGame();
+            }
+        });
+
+        // Keyboard accessibility for modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeGame();
+            }
+        });
+
+        // Add loading animation to play buttons
+        document.querySelectorAll('.play-button').forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.textContent !== 'Coming Soon') {
+                    const originalText = this.textContent;
+                    this.innerHTML = '<span class="loading"></span> Loading...';
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                    }, 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
