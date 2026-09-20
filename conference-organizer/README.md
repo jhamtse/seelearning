@@ -25,7 +25,8 @@ invitations, travel, or session assignments.
 
 **First time only:** install [Node.js](https://nodejs.org) — download the
 "LTS" version for your computer and run the installer, using all the
-default options.
+default options. (This app needs Node 22.5 or newer; the current LTS
+download from nodejs.org already satisfies that.)
 
 **Every time you want to use the app:**
 
@@ -40,7 +41,23 @@ while you're using the app — closing it stops the app. To stop the app on
 purpose, just close that window.
 
 The first time you run it, it'll take a minute or two to set itself up —
-that's normal, and it's quick every time after that.
+that's normal, and it's quick every time after that. If something goes
+wrong during setup, the window will now stay open and show you what
+happened instead of closing — see Troubleshooting below.
+
+### Troubleshooting
+
+- **"Node.js not found"**, even after installing it: fully quit and reopen
+  the launcher (and if that doesn't help, restart your computer once —
+  this refreshes a setting the installer changes that otherwise only
+  takes effect after a restart).
+- **The window shows an error and stays open**: that's intentional now —
+  scroll up in that window to read the error, and feel free to copy the
+  whole window's text if you need help interpreting it.
+- **Browser says "server not found" right after it opens**: this is
+  normal on the very first run — the setup can take longer than the few
+  seconds the browser waits. Wait a minute, then reload the page (or
+  manually go to `http://localhost:3000`).
 
 ## Where your data lives
 

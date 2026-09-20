@@ -12,6 +12,16 @@ if errorlevel 1 (
 if not exist node_modules (
   echo First-time setup: installing the app ^(this can take a minute or two^)...
   call npm install
+  if errorlevel 1 (
+    echo.
+    echo ==========================================================
+    echo Setup failed. Scroll up to see the error message above.
+    echo If you're not sure what it means, copy this whole window's
+    echo text and share it so it can be fixed.
+    echo ==========================================================
+    pause
+    exit /b 1
+  )
 )
 
 echo.
@@ -22,3 +32,11 @@ echo.
 
 start "" cmd /c "timeout /t 3 >nul && start http://localhost:3000"
 call npm run dev
+
+echo.
+echo ==========================================================
+echo The app has stopped. If that was unexpected, scroll up to
+echo see if there's an error message, and share this window's
+echo text so it can be fixed.
+echo ==========================================================
+pause

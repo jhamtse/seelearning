@@ -183,18 +183,18 @@ export function createPerson(input: PersonInput): string {
   const id = nanoid();
   db.prepare(
     `INSERT INTO people (id, name, email, phone, affiliation, title, location_type, bio, notes)
-     VALUES (@id, @name, @email, @phone, @affiliation, @title, @locationType, @bio, @notes)`
-  ).run({
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
     id,
-    name: input.name,
-    email: input.email ?? null,
-    phone: input.phone ?? null,
-    affiliation: input.affiliation ?? null,
-    title: input.title ?? null,
-    locationType: input.locationType,
-    bio: input.bio ?? null,
-    notes: input.notes ?? null,
-  });
+    input.name,
+    input.email ?? null,
+    input.phone ?? null,
+    input.affiliation ?? null,
+    input.title ?? null,
+    input.locationType,
+    input.bio ?? null,
+    input.notes ?? null
+  );
   setPersonTags(id, input.tags);
   return id;
 }
@@ -202,27 +202,27 @@ export function createPerson(input: PersonInput): string {
 export function updatePerson(id: string, input: PersonInput): void {
   db.prepare(
     `UPDATE people SET
-       name = @name,
-       email = @email,
-       phone = @phone,
-       affiliation = @affiliation,
-       title = @title,
-       location_type = @locationType,
-       bio = @bio,
-       notes = @notes,
+       name = ?,
+       email = ?,
+       phone = ?,
+       affiliation = ?,
+       title = ?,
+       location_type = ?,
+       bio = ?,
+       notes = ?,
        updated_at = datetime('now')
-     WHERE id = @id`
-  ).run({
-    id,
-    name: input.name,
-    email: input.email ?? null,
-    phone: input.phone ?? null,
-    affiliation: input.affiliation ?? null,
-    title: input.title ?? null,
-    locationType: input.locationType,
-    bio: input.bio ?? null,
-    notes: input.notes ?? null,
-  });
+     WHERE id = ?`
+  ).run(
+    input.name,
+    input.email ?? null,
+    input.phone ?? null,
+    input.affiliation ?? null,
+    input.title ?? null,
+    input.locationType,
+    input.bio ?? null,
+    input.notes ?? null,
+    id
+  );
   setPersonTags(id, input.tags);
 }
 

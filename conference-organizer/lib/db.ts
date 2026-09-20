@@ -1,17 +1,20 @@
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
+import fs from "node:fs";
 
-const dbPath = path.join(process.cwd(), "data", "conference-organizer.db");
+const dataDir = path.join(process.cwd(), "data");
+fs.mkdirSync(dataDir, { recursive: true });
+const dbPath = path.join(dataDir, "conference-organizer.db");
 
 declare global {
-  var __db__: Database.Database | undefined;
+  var __db__: DatabaseSync | undefined;
 }
 
 function createConnection() {
-  const db = new Database(dbPath);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-  return db;
+  const database = new DatabaseSync(dbPath);
+  database.exec("PRAGMA journal_mode = WAL");
+  database.exec("PRAGMA foreign_keys = ON");
+  return database;
 }
 
 // Reuse a single connection across hot reloads in dev.
