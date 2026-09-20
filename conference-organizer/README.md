@@ -1,25 +1,41 @@
-# Conference Organizer — People Repository (v1)
+# Conference Organizer
 
 A web app, for your own computer, that manages the people you work with
-professionally — so you have one place to store contacts before you start
-inviting them to conferences. This is the first milestone of a larger
-conference-organizing tool; it does not yet include conferences,
-invitations, travel, or session assignments.
+professionally and the events you invite them to.
 
 ## What's here
 
-- **People repository**: add, edit, and remove contacts with name, email,
-  phone, affiliation, title, location type (local / domestic /
-  international), tags (field of expertise), bio, photo, and free-form notes.
-- **Search & filter**: search across name/email/affiliation/tags, or filter
-  by tag and location type.
-- **Publications**: attach a list of publications (title, year, link) to
-  each person.
+### People repository
+
+- Add, edit, and remove contacts with name, email, phone, affiliation,
+  title, location type (local / domestic / international), tags (field of
+  expertise), bio, photo, and free-form notes.
+- Search across name/email/affiliation/tags, or filter by tag and location
+  type.
+- Attach a list of publications (title, year, link) to each person.
 - **CSV import**: bring in your existing spreadsheet. It auto-matches common
   column names (name, email, phone, affiliation/institution,
   title/role, location, tags/expertise, bio, notes) case-insensitively, so
   you generally don't need to reformat your file first. Only `name` is
   required — rows missing a name are skipped and listed.
+
+### Events
+
+- Create an event (think-tank/small meeting, public event, professional
+  event, or other), with dates, location, and a total budget.
+- Add a subset of people from your repository to an event — not everyone
+  in your repository needs to be invited to everything.
+- Track, per person per event: attending status (invited / confirmed /
+  declined / tentative), meal preference, and itemized costs (flight,
+  hotel, meals, honorarium) that roll up into a total.
+- Add sessions within an event (title, date/time, room) and assign people
+  to them with a role (presenter, discussant, note taker, moderator,
+  attendee) and a separate acceptance status for that role, since being
+  asked to present is a different ask than just attending.
+- **Dashboard** on each event page: attending/confirmed counts, presenting
+  acceptance (accepted / pending / declined), a breakdown of invitees by
+  region and by specialization (tags), and total expense vs. budget with
+  an over-budget warning.
 
 ## Running it (the easy way)
 
@@ -63,7 +79,8 @@ happened instead of closing — see Troubleshooting below.
 
 Everything you enter is stored right on your computer, in this folder:
 
-- Contacts, tags, and publications: `data/conference-organizer.db`
+- Contacts, tags, publications, events, and sessions:
+  `data/conference-organizer.db`
 - Uploaded photos: `public/uploads/photos/`
 
 There's no internet account, no login, and nothing is sent anywhere. That
@@ -103,12 +120,16 @@ Then open http://localhost:3000.
 
 - **Single-user, local tool**: there's no login because it's just you, on
   your own computer. A participant self-service portal (for people to
-  submit their own bio/photo/meal preference) is planned for a later
-  milestone, and will need its own design once we get there.
+  submit their own bio/photo/meal preference, or respond to an invitation
+  themselves) is planned for a later milestone, and will need its own
+  design once we get there.
+- **No emailing yet**: invitations, reminders, and status updates are
+  tracked in the app, but nothing is sent automatically — you're still
+  emailing people yourself and updating their status here.
 
 ## What's next
 
-Planned next milestones, in order: conferences (each pulling a subset of
-people from this repository based on budget/theme), invitation tracking,
-travel/hotel/meal logistics, and session/role assignment (presenter,
-discussant, note-taker) with a participant-facing bio page per conference.
+Ideas for later, not yet built: emailing invitations/reminders directly
+from the app, a participant-facing bio page per event (so attendees can
+see who else is coming), de-duplication on CSV re-import, and exporting an
+event's roster/budget to a spreadsheet.

@@ -37,6 +37,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/people/import" className="hover:text-zinc-900">
                 Import
               </Link>
+              <Link href="/events" className="hover:text-zinc-900">
+                Events
+              </Link>
             </nav>
           </div>
         </header>
