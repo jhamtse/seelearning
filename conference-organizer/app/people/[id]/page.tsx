@@ -16,7 +16,7 @@ export default async function PersonDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const person = getPerson(id);
+  const person = await getPerson(id);
   if (!person) notFound();
 
   const updateAction = updatePersonAction.bind(null, id);

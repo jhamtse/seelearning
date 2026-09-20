@@ -7,12 +7,14 @@ export default async function PeoplePage({
   searchParams: Promise<{ q?: string; tag?: string; location?: string }>;
 }) {
   const params = await searchParams;
-  const people = listPeople({
-    q: params.q,
-    tag: params.tag,
-    locationType: params.location,
-  });
-  const tags = getAllTags();
+  const [people, tags] = await Promise.all([
+    listPeople({
+      q: params.q,
+      tag: params.tag,
+      locationType: params.location,
+    }),
+    getAllTags(),
+  ]);
 
   return (
     <div>

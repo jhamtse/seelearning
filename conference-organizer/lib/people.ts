@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { db } from "./db";
+import { ensureSchema, pool } from "./db";
 
 export type LocationType = "local" | "domestic" | "international";
 
@@ -51,11 +51,11 @@ type PersonRow = {
   photo_path: string | null;
   bio: string | null;
   notes: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 };
 
-function rowToPerson(row: PersonRow): Person {
+async function rowToPerson(row: PersonRow): Promise<Person> {
   return {
     id: row.id,
     name: row.name,
@@ -67,97 +67,108 @@ function rowToPerson(row: PersonRow): Person {
     photoPath: row.photo_path,
     bio: row.bio,
     notes: row.notes,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    tags: getTagsForPerson(row.id),
-    publications: getPublicationsForPerson(row.id),
+    createdAt: row.created_at.toISOString(),
+    updatedAt: row.updated_at.toISOString(),
+    tags: await getTagsForPerson(row.id),
+    publications: await getPublicationsForPerson(row.id),
   };
 }
 
-function getTagsForPerson(personId: string): string[] {
-  const rows = db
-    .prepare(
-      `SELECT t.name FROM tags t
-       JOIN person_tags pt ON pt.tag_id = t.id
-       WHERE pt.person_id = ?
-       ORDER BY t.name COLLATE NOCASE`
-    )
-    .all(personId) as { name: string }[];
+async function getTagsForPerson(personId: string): Promise<string[]> {
+  const { rows } = await pool.query<{ name: string }>(
+    `SELECT t.name FROM tags t
+     JOIN person_tags pt ON pt.tag_id = t.id
+     WHERE pt.person_id = $1
+     ORDER BY t.name`,
+    [personId]
+  );
   return rows.map((r) => r.name);
 }
 
-function getPublicationsForPerson(personId: string): Publication[] {
-  const rows = db
-    .prepare(
-      `SELECT id, person_id as personId, title, url, year FROM publications
-       WHERE person_id = ? ORDER BY year DESC, created_at DESC`
-    )
-    .all(personId) as Publication[];
-  return rows;
+async function getPublicationsForPerson(personId: string): Promise<Publication[]> {
+  const { rows } = await pool.query<{
+    id: string;
+    personid: string;
+    title: string;
+    url: string | null;
+    year: string | null;
+  }>(
+    `SELECT id, person_id as personId, title, url, year FROM publications
+     WHERE person_id = $1 ORDER BY year DESC NULLS LAST, created_at DESC`,
+    [personId]
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    personId: r.personid,
+    title: r.title,
+    url: r.url,
+    year: r.year,
+  }));
 }
 
-function upsertTag(name: string): string {
+async function upsertTag(name: string): Promise<string> {
   const trimmed = name.trim();
-  const existing = db
-    .prepare(`SELECT id FROM tags WHERE name = ? COLLATE NOCASE`)
-    .get(trimmed) as { id: string } | undefined;
-  if (existing) return existing.id;
   const id = nanoid();
-  db.prepare(`INSERT INTO tags (id, name) VALUES (?, ?)`).run(id, trimmed);
-  return id;
+  const { rows } = await pool.query<{ id: string }>(
+    `INSERT INTO tags (id, name) VALUES ($1, $2)
+     ON CONFLICT (lower(name)) DO UPDATE SET name = tags.name
+     RETURNING id`,
+    [id, trimmed]
+  );
+  return rows[0].id;
 }
 
-function setPersonTags(personId: string, tagNames: string[]) {
-  db.prepare(`DELETE FROM person_tags WHERE person_id = ?`).run(personId);
+async function setPersonTags(personId: string, tagNames: string[]): Promise<void> {
+  await pool.query(`DELETE FROM person_tags WHERE person_id = $1`, [personId]);
   const uniqueNames = [...new Set(tagNames.map((t) => t.trim()).filter(Boolean))];
   for (const name of uniqueNames) {
-    const tagId = upsertTag(name);
-    db.prepare(
-      `INSERT OR IGNORE INTO person_tags (person_id, tag_id) VALUES (?, ?)`
-    ).run(personId, tagId);
+    const tagId = await upsertTag(name);
+    await pool.query(
+      `INSERT INTO person_tags (person_id, tag_id) VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`,
+      [personId, tagId]
+    );
   }
-  db.prepare(
+  await pool.query(
     `DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM person_tags)`
-  ).run();
+  );
 }
 
-export function listPeople(filter: {
+export async function listPeople(filter: {
   q?: string;
   tag?: string;
   locationType?: string;
-} = {}): Person[] {
-  let ids: string[];
+} = {}): Promise<Person[]> {
+  await ensureSchema();
 
+  let idSet: Set<string> | null = null;
   if (filter.tag) {
-    ids = (
-      db
-        .prepare(
-          `SELECT DISTINCT p.id FROM people p
-           JOIN person_tags pt ON pt.person_id = p.id
-           JOIN tags t ON t.id = pt.tag_id
-           WHERE t.name = ? COLLATE NOCASE`
-        )
-        .all(filter.tag) as { id: string }[]
-    ).map((r) => r.id);
-  } else {
-    ids = (db.prepare(`SELECT id FROM people`).all() as { id: string }[]).map(
-      (r) => r.id
+    const { rows } = await pool.query<{ id: string }>(
+      `SELECT DISTINCT p.id FROM people p
+       JOIN person_tags pt ON pt.person_id = p.id
+       JOIN tags t ON t.id = pt.tag_id
+       WHERE lower(t.name) = lower($1)`,
+      [filter.tag]
     );
+    idSet = new Set(rows.map((r) => r.id));
   }
 
-  const idSet = new Set(ids);
-
-  let rows = db
-    .prepare(`SELECT * FROM people ORDER BY name COLLATE NOCASE`)
-    .all() as PersonRow[];
-
-  rows = rows.filter((r) => idSet.has(r.id));
-
+  const conditions: string[] = [];
+  const params: string[] = [];
   if (filter.locationType) {
-    rows = rows.filter((r) => r.location_type === filter.locationType);
+    params.push(filter.locationType);
+    conditions.push(`location_type = $${params.length}`);
   }
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  let people = rows.map(rowToPerson);
+  const { rows } = await pool.query<PersonRow>(
+    `SELECT * FROM people ${where} ORDER BY name`,
+    params
+  );
+
+  const filteredRows = idSet ? rows.filter((r) => idSet!.has(r.id)) : rows;
+
+  let people = await Promise.all(filteredRows.map(rowToPerson));
 
   if (filter.q) {
     const q = filter.q.toLowerCase();
@@ -171,95 +182,110 @@ export function listPeople(filter: {
   return people;
 }
 
-export function getPerson(id: string): Person | undefined {
-  const row = db.prepare(`SELECT * FROM people WHERE id = ?`).get(id) as
-    | PersonRow
-    | undefined;
-  if (!row) return undefined;
-  return rowToPerson(row);
+export async function getPerson(id: string): Promise<Person | undefined> {
+  await ensureSchema();
+  const { rows } = await pool.query<PersonRow>(
+    `SELECT * FROM people WHERE id = $1`,
+    [id]
+  );
+  if (rows.length === 0) return undefined;
+  return rowToPerson(rows[0]);
 }
 
-export function createPerson(input: PersonInput): string {
+export async function createPerson(input: PersonInput): Promise<string> {
+  await ensureSchema();
   const id = nanoid();
-  db.prepare(
+  await pool.query(
     `INSERT INTO people (id, name, email, phone, affiliation, title, location_type, bio, notes)
-     VALUES (@id, @name, @email, @phone, @affiliation, @title, @locationType, @bio, @notes)`
-  ).run({
-    id,
-    name: input.name,
-    email: input.email ?? null,
-    phone: input.phone ?? null,
-    affiliation: input.affiliation ?? null,
-    title: input.title ?? null,
-    locationType: input.locationType,
-    bio: input.bio ?? null,
-    notes: input.notes ?? null,
-  });
-  setPersonTags(id, input.tags);
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [
+      id,
+      input.name,
+      input.email ?? null,
+      input.phone ?? null,
+      input.affiliation ?? null,
+      input.title ?? null,
+      input.locationType,
+      input.bio ?? null,
+      input.notes ?? null,
+    ]
+  );
+  await setPersonTags(id, input.tags);
   return id;
 }
 
-export function updatePerson(id: string, input: PersonInput): void {
-  db.prepare(
+export async function updatePerson(id: string, input: PersonInput): Promise<void> {
+  await ensureSchema();
+  await pool.query(
     `UPDATE people SET
-       name = @name,
-       email = @email,
-       phone = @phone,
-       affiliation = @affiliation,
-       title = @title,
-       location_type = @locationType,
-       bio = @bio,
-       notes = @notes,
-       updated_at = datetime('now')
-     WHERE id = @id`
-  ).run({
-    id,
-    name: input.name,
-    email: input.email ?? null,
-    phone: input.phone ?? null,
-    affiliation: input.affiliation ?? null,
-    title: input.title ?? null,
-    locationType: input.locationType,
-    bio: input.bio ?? null,
-    notes: input.notes ?? null,
-  });
-  setPersonTags(id, input.tags);
+       name = $2,
+       email = $3,
+       phone = $4,
+       affiliation = $5,
+       title = $6,
+       location_type = $7,
+       bio = $8,
+       notes = $9,
+       updated_at = now()
+     WHERE id = $1`,
+    [
+      id,
+      input.name,
+      input.email ?? null,
+      input.phone ?? null,
+      input.affiliation ?? null,
+      input.title ?? null,
+      input.locationType,
+      input.bio ?? null,
+      input.notes ?? null,
+    ]
+  );
+  await setPersonTags(id, input.tags);
 }
 
-export function deletePerson(id: string): void {
-  db.prepare(`DELETE FROM people WHERE id = ?`).run(id);
-  db.prepare(
+export async function deletePerson(id: string): Promise<void> {
+  await ensureSchema();
+  await pool.query(`DELETE FROM people WHERE id = $1`, [id]);
+  await pool.query(
     `DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM person_tags)`
-  ).run();
+  );
 }
 
-export function setPersonPhoto(id: string, photoPath: string | null): void {
-  db.prepare(
-    `UPDATE people SET photo_path = ?, updated_at = datetime('now') WHERE id = ?`
-  ).run(photoPath, id);
+export async function setPersonPhoto(
+  id: string,
+  photoPath: string | null
+): Promise<void> {
+  await ensureSchema();
+  await pool.query(
+    `UPDATE people SET photo_path = $2, updated_at = now() WHERE id = $1`,
+    [id, photoPath]
+  );
 }
 
-export function getAllTags(): { name: string; count: number }[] {
-  return db
-    .prepare(
-      `SELECT t.name as name, COUNT(pt.person_id) as count
-       FROM tags t
-       LEFT JOIN person_tags pt ON pt.tag_id = t.id
-       GROUP BY t.id
-       ORDER BY t.name COLLATE NOCASE`
-    )
-    .all() as { name: string; count: number }[];
+export async function getAllTags(): Promise<{ name: string; count: number }[]> {
+  await ensureSchema();
+  const { rows } = await pool.query<{ name: string; count: string }>(
+    `SELECT t.name as name, COUNT(pt.person_id) as count
+     FROM tags t
+     LEFT JOIN person_tags pt ON pt.tag_id = t.id
+     GROUP BY t.id, t.name
+     ORDER BY t.name`
+  );
+  return rows.map((r) => ({ name: r.name, count: Number(r.count) }));
 }
 
-export function addPublication(
+export async function addPublication(
   personId: string,
   pub: { title: string; url?: string | null; year?: string | null }
-): void {
-  db.prepare(
-    `INSERT INTO publications (id, person_id, title, url, year) VALUES (?, ?, ?, ?, ?)`
-  ).run(nanoid(), personId, pub.title, pub.url ?? null, pub.year ?? null);
+): Promise<void> {
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO publications (id, person_id, title, url, year) VALUES ($1, $2, $3, $4, $5)`,
+    [nanoid(), personId, pub.title, pub.url ?? null, pub.year ?? null]
+  );
 }
 
-export function deletePublication(id: string): void {
-  db.prepare(`DELETE FROM publications WHERE id = ?`).run(id);
+export async function deletePublication(id: string): Promise<void> {
+  await ensureSchema();
+  await pool.query(`DELETE FROM publications WHERE id = $1`, [id]);
 }
