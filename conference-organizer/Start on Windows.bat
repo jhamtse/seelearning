@@ -24,6 +24,11 @@ if not exist node_modules (
   )
 )
 
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3000 ^| findstr LISTENING') do (
+  echo Found an old copy of this app still running in the background — stopping it first...
+  taskkill /F /PID %%a >nul 2>nul
+)
+
 echo.
 echo Starting Conference Organizer...
 echo Your browser will open in a few seconds. If it doesn't, go to http://localhost:3000

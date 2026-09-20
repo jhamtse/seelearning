@@ -11,7 +11,9 @@ declare global {
 }
 
 function createConnection() {
-  const database = new DatabaseSync(dbPath);
+  // timeout: retry for up to 5s instead of erroring immediately when another
+  // process (e.g. Next.js's parallel build workers) briefly holds a lock.
+  const database = new DatabaseSync(dbPath, { timeout: 5000 });
   database.exec("PRAGMA journal_mode = WAL");
   database.exec("PRAGMA foreign_keys = ON");
   return database;

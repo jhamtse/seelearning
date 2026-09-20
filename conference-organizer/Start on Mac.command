@@ -20,6 +20,13 @@ if [ ! -d node_modules ]; then
   fi
 fi
 
+old_pid=$(lsof -ti tcp:3000 2>/dev/null)
+if [ -n "$old_pid" ]; then
+  echo "Found an old copy of this app still running in the background — stopping it first..."
+  kill $old_pid 2>/dev/null
+  sleep 1
+fi
+
 echo ""
 echo "Starting Conference Organizer..."
 echo "Your browser will open in a few seconds. If it doesn't, go to http://localhost:3000"

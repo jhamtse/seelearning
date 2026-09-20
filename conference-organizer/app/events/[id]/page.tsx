@@ -199,10 +199,22 @@ export default async function EventDetailPage({
                   >
                     <Link
                       href={`/people/${p.personId}`}
-                      className="w-48 flex-shrink-0 truncate text-sm font-medium text-zinc-800 hover:underline"
+                      className="flex w-48 flex-shrink-0 items-center gap-2 truncate text-sm font-medium text-zinc-800 hover:underline"
                       title={p.person.name}
                     >
-                      {p.person.name}
+                      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-200 text-xs font-semibold text-zinc-600">
+                        {p.person.photoPath ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={p.person.photoPath}
+                            alt={p.person.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          p.person.name.slice(0, 1).toUpperCase()
+                        )}
+                      </span>
+                      <span className="truncate">{p.person.name}</span>
                     </Link>
                     <select
                       name="attendingStatus"
