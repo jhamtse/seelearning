@@ -1,33 +1,26 @@
-import { Pool } from "pg";
+import Database from "better-sqlite3";
+import path from "node:path";
+
+const dbPath = path.join(process.cwd(), "data", "conference-organizer.db");
 
 declare global {
-  var __pgPool__: Pool | undefined;
-  var __schemaReady__: Promise<void> | undefined;
+  var __db__: Database.Database | undefined;
 }
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error(
-    "DATABASE_URL is not set. Add a Postgres connection string (e.g. from Neon) " +
-      "to your environment. See README.md for setup instructions."
-  );
+function createConnection() {
+  const db = new Database(dbPath);
+  db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
+  return db;
 }
 
-export const pool =
-  global.__pgPool__ ??
-  new Pool({
-    connectionString,
-    ssl: connectionString.includes("localhost")
-      ? false
-      : { rejectUnauthorized: false },
-  });
-
+// Reuse a single connection across hot reloads in dev.
+export const db = global.__db__ ?? createConnection();
 if (process.env.NODE_ENV !== "production") {
-  global.__pgPool__ = pool;
+  global.__db__ = db;
 }
 
-const SCHEMA_SQL = `
+db.exec(`
   CREATE TABLE IF NOT EXISTS people (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -40,13 +33,13 @@ const SCHEMA_SQL = `
     photo_path TEXT,
     bio TEXT,
     notes TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
   CREATE TABLE IF NOT EXISTS tags (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE
+    name TEXT NOT NULL UNIQUE COLLATE NOCASE
   );
 
   CREATE TABLE IF NOT EXISTS person_tags (
@@ -61,18 +54,10 @@ const SCHEMA_SQL = `
     title TEXT NOT NULL,
     url TEXT,
     year TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
   CREATE INDEX IF NOT EXISTS idx_person_tags_person ON person_tags(person_id);
   CREATE INDEX IF NOT EXISTS idx_person_tags_tag ON person_tags(tag_id);
   CREATE INDEX IF NOT EXISTS idx_publications_person ON publications(person_id);
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_name_lower ON tags (lower(name));
-`;
-
-export function ensureSchema(): Promise<void> {
-  if (!global.__schemaReady__) {
-    global.__schemaReady__ = pool.query(SCHEMA_SQL).then(() => undefined);
-  }
-  return global.__schemaReady__;
-}
+`);

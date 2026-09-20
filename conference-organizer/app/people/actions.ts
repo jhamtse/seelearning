@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { put } from "@vercel/blob";
+import { nanoid } from "nanoid";
+import fs from "node:fs/promises";
+import path from "node:path";
 import Papa from "papaparse";
 import {
   addPublication,
@@ -46,19 +48,13 @@ async function savePhotoIfPresent(personId: string, formData: FormData) {
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) return;
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    console.warn(
-      "Skipping photo upload: BLOB_READ_WRITE_TOKEN is not set. " +
-        "Connect a Vercel Blob store to enable photo uploads."
-    );
-    return;
-  }
-
-  const blob = await put(`photos/${personId}-${Date.now()}-${file.name}`, file, {
-    access: "public",
-    addRandomSuffix: true,
-  });
-  await setPersonPhoto(personId, blob.url);
+  const ext = path.extname(file.name) || ".jpg";
+  const filename = `${personId}-${nanoid(8)}${ext}`;
+  const uploadDir = path.join(process.cwd(), "public", "uploads", "photos");
+  await fs.mkdir(uploadDir, { recursive: true });
+  const bytes = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(path.join(uploadDir, filename), bytes);
+  setPersonPhoto(personId, `/uploads/photos/${filename}`);
 }
 
 export async function createPersonAction(formData: FormData) {
@@ -66,7 +62,7 @@ export async function createPersonAction(formData: FormData) {
   if (!input.name) {
     throw new Error("Name is required");
   }
-  const id = await createPerson(input);
+  const id = createPerson(input);
   await savePhotoIfPresent(id, formData);
   revalidatePath("/people");
   redirect(`/people/${id}`);
@@ -77,7 +73,7 @@ export async function updatePersonAction(id: string, formData: FormData) {
   if (!input.name) {
     throw new Error("Name is required");
   }
-  await updatePerson(id, input);
+  updatePerson(id, input);
   await savePhotoIfPresent(id, formData);
   revalidatePath("/people");
   revalidatePath(`/people/${id}`);
@@ -85,7 +81,7 @@ export async function updatePersonAction(id: string, formData: FormData) {
 }
 
 export async function deletePersonAction(id: string) {
-  await deletePerson(id);
+  deletePerson(id);
   revalidatePath("/people");
   redirect("/people");
 }
@@ -93,7 +89,7 @@ export async function deletePersonAction(id: string) {
 export async function addPublicationAction(personId: string, formData: FormData) {
   const title = String(formData.get("pubTitle") ?? "").trim();
   if (!title) return;
-  await addPublication(personId, {
+  addPublication(personId, {
     title,
     url: (formData.get("pubUrl") as string) || null,
     year: (formData.get("pubYear") as string) || null,
@@ -102,7 +98,7 @@ export async function addPublicationAction(personId: string, formData: FormData)
 }
 
 export async function deletePublicationAction(personId: string, pubId: string) {
-  await deletePublication(pubId);
+  deletePublication(pubId);
   revalidatePath(`/people/${personId}`);
 }
 
@@ -180,7 +176,7 @@ export async function importCsvAction(
     }
 
     try {
-      await createPerson({
+      createPerson({
         name,
         email: mapped.email ?? null,
         phone: mapped.phone ?? null,

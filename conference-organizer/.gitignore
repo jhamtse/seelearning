@@ -32,7 +32,6 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-!.env.example
 
 # vercel
 .vercel
@@ -41,3 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+
+# local data (contains personal contact info, don't commit)
+/data/*.db
+/data/*.db-*
+/public/uploads/photos/*
+!/public/uploads/photos/.gitkeep
